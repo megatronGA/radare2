@@ -148,7 +148,7 @@ static RAnalBlock *fcn_append_basic_block(RAnal *anal, RAnalFunction *fcn, ut64 
 
 #define gotoBeach(x) ret = x; goto beach;
 
-static bool isInvalidMemory(RAnal *anal, const ut8 *buf, int len) {
+static bool is_invalid_memory(RAnal *anal, const ut8 *buf, int len) {
 	if (anal->opt.nonull > 0) {
 		int i;
 		const int count = R_MIN (len, anal->opt.nonull);
@@ -168,8 +168,8 @@ static bool is_symbol_flag(const char *name) {
 	return strstr (name, "imp.")
 		|| strstr (name, "dbg.")
 		|| strstr (name, "sym.")
-		|| strstr (name, "entry")
-		|| strstr (name, "main");
+		|| !strncmp (name, "entry", 5)
+		|| !strcmp (name, "main");
 }
 
 static bool next_instruction_is_symbol(RAnal *anal, RAnalOp *op) {
@@ -691,7 +691,7 @@ repeat:
 			eprintf ("Failed to read\n");
 			break;
 		}
-		if (isInvalidMemory (anal, buf, bytes_read)) {
+		if (is_invalid_memory (anal, buf, bytes_read)) {
 			if (anal->verbose) {
 				eprintf ("Warning: FFFF opcode at 0x%08"PFMT64x "\n", at);
 			}
