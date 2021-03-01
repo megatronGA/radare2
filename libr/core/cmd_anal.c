@@ -882,7 +882,7 @@ static void __add_vars_sdb(RCore *core, RAnalFunction *fcn) {
 	r_list_foreach (all_vars, iter, var) {
 		if (var->isarg) {
 			char *name = var->name;
-			char *k = r_str_newf ("func.%s.arg.%zd", fcn->name, arg_count++);
+			char *k = r_str_newf ("func.%s.arg.%zu", fcn->name, arg_count++);
 			const char *o = sdb_const_get (core->anal->sdb_types, k, 0);
 			char *vname = o?strchr (o, ','):NULL;
 			if (vname) name = vname+1;
@@ -4315,7 +4315,7 @@ static int cmd_anal_fcn(RCore *core, const char *input) {
 				input++;
 				anal_calls = true;
 			} else {
-				anal_calls = r_config_get_i (core->config, "anal.calls");;
+				anal_calls = r_config_get_i (core->config, "anal.calls");
 			}
 			ut64 addr = core->offset;
 			char *name = NULL;
