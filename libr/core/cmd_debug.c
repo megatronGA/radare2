@@ -1445,6 +1445,20 @@ static int r_debug_heap(RCore *core, const char *input) {
 }
 
 static bool get_bin_info(RCore *core, const char *file, ut64 baseaddr, PJ *pj, int mode, bool symbols_only, RCoreBinFilter *filter) {
+#if __APPLE__
+	switch (mode) {
+	case R_MODE_SET:
+		r_core_cmdf (core, ".!rabin2 -rsEB 0x%08"PFMT64x" %s", baseaddr, file);
+		break;
+	case R_MODE_RADARE:
+		r_core_cmdf (core, "!!rabin2 -rsEB 0x%08"PFMT64x" %s", baseaddr, file);
+		break;
+	default:
+		r_core_cmdf (core, "!!rabin2 -E -B 0x%08"PFMT64x" %s", baseaddr, file);
+		break;
+	}
+	return true;
+#else
 	int fd;
 	if ((fd = r_io_fd_open (core->io, file, R_PERM_R, 0)) == -1) {
 		return false;
@@ -1460,7 +1474,11 @@ static bool get_bin_info(RCore *core, const char *file, ut64 baseaddr, PJ *pj, i
 	}
 	int action = R_CORE_BIN_ACC_ALL & ~R_CORE_BIN_ACC_INFO;
 	if (symbols_only || filter->name) {
-		action = R_CORE_BIN_ACC_SYMBOLS;
+		action |= R_CORE_BIN_ACC_EXPORTS;
+		action |= R_CORE_BIN_ACC_INFO;
+		action |= R_CORE_BIN_ACC_SYMBOLS;
+		action |= R_CORE_BIN_ACC_ENTRIES;
+		action |= R_CORE_BIN_ACC_MAIN;
 	} else if (mode == R_MODE_SET || mode == R_MODE_RADARE) {
 		action &= ~R_CORE_BIN_ACC_ENTRIES & ~R_CORE_BIN_ACC_MAIN;
 	}
@@ -1470,6 +1488,7 @@ static bool get_bin_info(RCore *core, const char *file, ut64 baseaddr, PJ *pj, i
 	r_bin_file_set_cur_binfile (core->bin, obf);
 	r_io_fd_close (core->io, fd);
 	return true;
+#endif
 }
 
 static int cmd_debug_map(RCore *core, const char *input) {
@@ -1613,7 +1632,7 @@ static int cmd_debug_map(RCore *core, const char *input) {
 					mode = R_MODE_PRINT;
 					break;
 				}
-				ptr = strdup (r_str_trim_head_ro (input + 2));
+				ptr = r_str_trim_dup (input + 2);
 				if (!ptr || !*ptr) {
 					r_core_cmd (core, "dmm", 0);
 					free (ptr);
@@ -1667,7 +1686,7 @@ static int cmd_debug_map(RCore *core, const char *input) {
 						}
 					} else {
 						r_bin_set_baddr (core->bin, map->addr);
-						r_core_bin_info (core, R_CORE_BIN_ACC_SYMBOLS, pj, input[1] == '*', true, &filter, NULL);
+						r_core_bin_info (core, R_CORE_BIN_ACC_EXPORTS | R_CORE_BIN_ACC_SYMBOLS, pj, input[1] == '*', true, &filter, NULL);
 						r_bin_set_baddr (core->bin, baddr);
 					}
 				}
@@ -1705,7 +1724,7 @@ static int cmd_debug_map(RCore *core, const char *input) {
 						filter.name = (char *) closest_symbol->name;
 
 						r_bin_set_baddr (core->bin, map->addr);
-						r_core_bin_info (core, R_CORE_BIN_ACC_SYMBOLS, NULL, false, true, &filter, NULL);
+						r_core_bin_info (core, R_CORE_BIN_ACC_SYMBOLS | R_CORE_BIN_ACC_EXPORTS, NULL, false, true, &filter, NULL);
 					}
 				}
 			}

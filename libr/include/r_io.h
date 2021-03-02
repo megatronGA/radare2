@@ -79,7 +79,6 @@ typedef struct r_io_undo_t {
 	int undos; /* available undos */
 	int redos; /* available redos */
 	RIOUndos seek[R_IO_UNDOS];
-	/*int fd[R_IO_UNDOS]; // XXX: Must be RIODesc* */
 } RIOUndo;
 
 typedef struct r_io_undo_w_t {
