@@ -96,7 +96,7 @@ typedef struct r_io_t {
 	int bits;
 	bool va;		//all of this config stuff must be in 1 int
 	bool ff;
-	bool Oxff;
+	ut8 Oxff; // which printable char to use instead of 0xff for unallocated bytes
 	size_t addrbytes;
 	bool aslr;
 	bool autofd;
