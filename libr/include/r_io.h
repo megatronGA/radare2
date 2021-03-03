@@ -94,7 +94,7 @@ typedef struct r_io_t {
 	struct r_io_desc_t *desc; // XXX deprecate... we should use only the fd integer, not hold a weak pointer
 	ut64 off;
 	int bits;
-	bool va;		//all of this config stuff must be in 1 int
+	int va;	// keep it as int, value can be 0, 1 or 2
 	bool ff;
 	ut8 Oxff; // which printable char to use instead of 0xff for unallocated bytes
 	size_t addrbytes;
